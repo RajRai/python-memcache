@@ -78,8 +78,35 @@ class TestCache(unittest.TestCase):
         self.assertIn('e', cache)
         self.assertIn('f', cache)
 
+    def test_no_MRU(self):
+        cache = caching.make_cache(self.cache_file, n=3, mru=False)
+        cache['a'] = 1
+        cache['b'] = 2
+        cache['c'] = 3
+
+        # Querying the value here would normally make it last to be evicted, but MRU is off
+        self.assertEqual(cache['a'], 1)
+
+        cache['d'] = 4
+        self.assertNotIn('a', cache)
+        self.assertIn('b', cache)
+        self.assertIn('c', cache)
+        self.assertIn('d', cache)
+
+        cache['e'] = 5
+        self.assertNotIn('b', cache)
+        self.assertIn('c', cache)
+        self.assertIn('d', cache)
+        self.assertIn('e', cache)
+
+        cache['f'] = 6
+        self.assertNotIn('c', cache)
+        self.assertIn('d', cache)
+        self.assertIn('e', cache)
+        self.assertIn('f', cache)
+
     def test_persist(self):
-        cache = caching.make_cache(self.cache_file, n=3)
+        cache = caching.make_cache(self.cache_file, n=3, mru=False)
         cache['a'] = 1
         cache['b'] = 2
         cache['c'] = 3
@@ -92,15 +119,15 @@ class TestCache(unittest.TestCase):
         self.assertIn('c', cache1)
 
         cache1['d'] = 4
-        self.assertNotIn('b', cache1)
+        self.assertNotIn('a', cache1)
+        self.assertIn('b', cache1)
         self.assertIn('c', cache1)
-        self.assertIn('a', cache1)
         self.assertIn('d', cache1)
 
         # Verify only the new cache was updated
+        self.assertIn('a', cache)
         self.assertIn('b', cache)
         self.assertIn('c', cache)
-        self.assertIn('a', cache)
         self.assertNotIn('d', cache)
 
 

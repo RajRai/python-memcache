@@ -4,11 +4,12 @@ from collections import OrderedDict
 
 
 class Cache(OrderedDict):
-    def __init__(self, file, protocol=pickle.HIGHEST_PROTOCOL, n=-1):
+    def __init__(self, file, protocol=pickle.HIGHEST_PROTOCOL, n=-1, mru=True):
         super().__init__()
         self.file = file
         self.protocol = protocol
         self.n = n
+        self.mru = mru
 
     def save(self):
         with open(self.file, 'wb') as file:
@@ -21,7 +22,7 @@ class Cache(OrderedDict):
 
     def __getitem__(self, item):
         value = super().__getitem__(item)
-        if item in self:
+        if self.mru and item in self:
             del self[item]
             self[item] = value  # If a value is queried, reset its eviction priority (index)
         return value
@@ -37,11 +38,11 @@ class Cache(OrderedDict):
         return new_state
 
 
-def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, n=-1, verbose=False) -> Cache:
+def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, n=-1, verbose=False, mru=True) -> Cache:
     if not exists(file):
         if verbose:
             print(f'Making cache file: {file} with protocol {protocol} and n={n}')
-        cache = Cache(file, protocol=protocol, n=n)
+        cache = Cache(file, protocol=protocol, n=n, mru=mru)
         cache.save()
         return cache
     with open(file, 'rb') as file:
