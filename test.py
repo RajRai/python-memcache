@@ -130,6 +130,18 @@ class TestCache(unittest.TestCase):
         self.assertIn('c', cache)
         self.assertNotIn('d', cache)
 
+    def test_downsize(self):
+        cache = caching.make_cache(self.cache_file, n=3)
+        cache['a'] = 1
+        cache['b'] = 2
+        cache['c'] = 3
+        self.assertEqual(3, len(cache))
+        cache.n = 1
+        cache['d'] = 4
+        self.assertNotIn('c', cache)
+        self.assertIn('d', cache)
+        self.assertEqual(1, len(cache))
+
 
 if __name__ == '__main__':
     unittest.main()

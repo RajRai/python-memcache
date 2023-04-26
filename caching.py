@@ -16,7 +16,7 @@ class Cache(OrderedDict):
             pickle.dump(self, file, protocol=self.protocol)
 
     def __setitem__(self, key, value):
-        if len(self) > self.n-1 > 0:
+        while len(self) > self.n-1 >= 0:
             self.popitem(last=False)
         super().__setitem__(key, value)
 
