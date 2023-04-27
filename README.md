@@ -1,5 +1,5 @@
 # python-memcache
-A memcache for python. Supports persistence, MRU mode, and max capacity selection.
+A  lightweight, local memcache for python. Supports persistence, MRU mode, and max capacity selection.
 
 The cache is only written to the disk on calls to `save()` to minimize overhead for basic operations in calling applications.
 
