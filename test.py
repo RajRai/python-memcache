@@ -17,18 +17,18 @@ class TestCache(unittest.TestCase):
         shutil.rmtree(self.tmp_folder)
 
     def test_make_cache(self):
-        cache1 = caching.make_cache(self.cache_file, n=5)
+        cache1 = caching.make_cache(self.cache_file, capacity=5)
         cache2 = caching.make_cache(self.cache_file)
-        self.assertEqual(cache1.n, cache2.n)
-        self.assertEqual(cache1.n, 5)
+        self.assertEqual(cache1.capacity, cache2.capacity)
+        self.assertEqual(cache1.capacity, 5)
 
     def test_update_n(self):
         cache = caching.make_cache(self.cache_file)
-        cache.n = 10
+        cache.resize(10)
         cache.save()
         cache1 = caching.make_cache(self.cache_file)
-        self.assertEqual(cache.n, cache1.n)
-        self.assertEqual(cache1.n, 10)
+        self.assertEqual(cache.capacity, cache1.capacity)
+        self.assertEqual(cache1.capacity, 10)
 
     def test_caching(self):
         cache = caching.make_cache(self.cache_file)
@@ -41,7 +41,7 @@ class TestCache(unittest.TestCase):
         self.assertNotIn('d', cache)
 
     def test_eviction(self):
-        cache = caching.make_cache(self.cache_file, n=3)
+        cache = caching.make_cache(self.cache_file, capacity=3)
         cache['a'] = 1
         cache['b'] = 2
         cache['c'] = 3
@@ -52,7 +52,7 @@ class TestCache(unittest.TestCase):
         self.assertIn('d', cache)
 
     def test_MRU(self):
-        cache = caching.make_cache(self.cache_file, n=3)
+        cache = caching.make_cache(self.cache_file, capacity=3)
         cache['a'] = 1
         cache['b'] = 2
         cache['c'] = 3
@@ -79,7 +79,7 @@ class TestCache(unittest.TestCase):
         self.assertIn('f', cache)
 
     def test_no_MRU(self):
-        cache = caching.make_cache(self.cache_file, n=3, mru=False)
+        cache = caching.make_cache(self.cache_file, capacity=3, mru=False)
         cache['a'] = 1
         cache['b'] = 2
         cache['c'] = 3
@@ -106,7 +106,7 @@ class TestCache(unittest.TestCase):
         self.assertIn('f', cache)
 
     def test_persist(self):
-        cache = caching.make_cache(self.cache_file, n=3, mru=False)
+        cache = caching.make_cache(self.cache_file, capacity=3, mru=False)
         cache['a'] = 1
         cache['b'] = 2
         cache['c'] = 3
@@ -131,12 +131,12 @@ class TestCache(unittest.TestCase):
         self.assertNotIn('d', cache)
 
     def test_downsize(self):
-        cache = caching.make_cache(self.cache_file, n=3)
+        cache = caching.make_cache(self.cache_file, capacity=3)
         cache['a'] = 1
         cache['b'] = 2
         cache['c'] = 3
         self.assertEqual(3, len(cache))
-        cache.n = 1
+        cache.resize(1)
         cache['d'] = 4
         self.assertNotIn('c', cache)
         self.assertIn('d', cache)

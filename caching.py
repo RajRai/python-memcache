@@ -4,20 +4,24 @@ from collections import OrderedDict
 
 
 class Cache(OrderedDict):
-    def __init__(self, file, protocol=pickle.HIGHEST_PROTOCOL, n=-1, mru=True):
+    def __init__(self, file_path, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True):
         super().__init__()
-        self.file = file
+        self.file_path = file_path
         self.protocol = protocol
-        self.n = n
+        self.capacity = capacity
         self.mru = mru
 
     def save(self):
-        with open(self.file, 'wb') as file:
+        with open(self.file_path, 'wb') as file:
             pickle.dump(self, file, protocol=self.protocol)
 
-    def __setitem__(self, key, value):
-        while len(self) > self.n-1 >= 0:
+    def resize(self, new_capacity):
+        self.capacity = new_capacity
+        while len(self) > self.capacity-1 >= 0:
             self.popitem(last=False)
+
+    def __setitem__(self, key, value):
+        self.resize(self.capacity)
         super().__setitem__(key, value)
 
     def __getitem__(self, item):
@@ -38,12 +42,17 @@ class Cache(OrderedDict):
         return new_state
 
 
-def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, n=-1, verbose=False, mru=True) -> Cache:
+def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True, verbose=False, prefer_saved_properties=False) -> Cache:
     if not exists(file):
         if verbose:
-            print(f'Making cache file: {file} with protocol {protocol} and n={n}')
-        cache = Cache(file, protocol=protocol, n=n, mru=mru)
+            print(f'Making cache file: {file} with protocol={protocol}, mru={mru}, and capacity={capacity}')
+        cache = Cache(file, protocol=protocol, capacity=capacity, mru=mru)
         cache.save()
         return cache
     with open(file, 'rb') as file:
-        return pickle.load(file)
+        cache = pickle.load(file)
+        if prefer_saved_properties:
+            cache.protocol = protocol
+            cache.mru = mru
+            cache.resize(capacity)
+        return cache
