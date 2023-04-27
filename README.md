@@ -3,7 +3,7 @@ A  lightweight, local memcache for python. Supports persistence, MRU mode, and m
 
 The cache is only written to the disk on calls to `save()` to minimize overhead for basic operations in calling applications.
 
-The entire cache is saved on calls to `save()`. If you want to save access entries only, try a `shelve`, or a different solution.
+The entire cache is saved on calls to `save()`. If you want to save access entries only, try a [shelve](https://docs.python.org/3/library/shelve.html), or a different solution.
 
 You can resize the cache either with `resize(new_capacity)`, or by accessing the `capacity` property directly.
 If you do it with the `capacity` property, the actual resize will only reliably happen the next time a value is stored to the cache. 
