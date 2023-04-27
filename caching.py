@@ -42,7 +42,7 @@ class Cache(OrderedDict):
         return new_state
 
 
-def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True, verbose=False, prefer_saved_properties=False) -> Cache:
+def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True, verbose=False, ignore_saved_properties=False) -> Cache:
     if not exists(file):
         if verbose:
             print(f'Making cache file: {file} with protocol={protocol}, mru={mru}, and capacity={capacity}')
@@ -51,7 +51,7 @@ def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True, ve
         return cache
     with open(file, 'rb') as file:
         cache = pickle.load(file)
-        if prefer_saved_properties:
+        if ignore_saved_properties:
             cache.protocol = protocol
             cache.mru = mru
             cache.resize(capacity)

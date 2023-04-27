@@ -142,6 +142,16 @@ class TestCache(unittest.TestCase):
         self.assertIn('d', cache)
         self.assertEqual(1, len(cache))
 
+    def test_saved_properties(self):
+        cache = caching.make_cache(self.cache_file, capacity=5)
+        cache.save()
+
+        cache = caching.make_cache(self.cache_file, capacity=10, ignore_saved_properties=True)
+        self.assertEqual(cache.capacity, 10)
+
+        cache = caching.make_cache(self.cache_file, capacity=10, ignore_saved_properties=False)
+        self.assertEqual(cache.capacity, 5)
+
 
 if __name__ == '__main__':
     unittest.main()
