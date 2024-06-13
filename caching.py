@@ -1,9 +1,8 @@
 import pickle
 from os.path import exists
-from collections import OrderedDict
 
 
-class Cache(OrderedDict):
+class Cache(dict):
     def __init__(self, file_path, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True):
         super().__init__()
         self.file_path = file_path
@@ -17,8 +16,8 @@ class Cache(OrderedDict):
 
     def resize(self, new_capacity):
         self.capacity = new_capacity
-        while len(self) > self.capacity-1 >= 0:
-            self.popitem(last=False)
+        while len(self) > self.capacity - 1 >= 0:
+            del self[next(iter(self))]
 
     def __setitem__(self, key, value):
         self.resize(self.capacity)
@@ -31,18 +30,25 @@ class Cache(OrderedDict):
             self[item] = value  # If a value is queried, reset its eviction priority (index)
         return value
 
+    # The next 3 methods are needed because we're trying to pickle a subclass of dict, which is a weird case
+    # https://stackoverflow.com/questions/21144845/how-can-i-unpickle-a-subclass-of-dict-that-validates-with-setitem-in-pytho
+    def __getstate__(self):
+        # Return the state to be pickled
+        state = self.__dict__.copy()
+        state['data'] = dict(self)
+        return state
+
+    def __setstate__(self, state):
+        # Restore the state when unpickling
+        self.__init__(state['file_path'], state['protocol'], state['capacity'], state['mru'])
+        self.update(state['data'])
+
     def __reduce__(self):
-        # https://stackoverflow.com/questions/45860040/pickling-a-subclass-of-an-ordereddict
-        state = super().__reduce__()
-        new_state = (state[0],
-                     ([],),
-                     self.__dict__,
-                     None,
-                     state[4])
-        return new_state
+        return self.__class__, (self.file_path, self.protocol, self.capacity, self.mru), self.__getstate__()
 
 
-def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True, verbose=False, ignore_saved_properties=False) -> Cache:
+def make_cache(file, protocol=pickle.HIGHEST_PROTOCOL, capacity=-1, mru=True, verbose=False,
+               ignore_saved_properties=False) -> Cache:
     if not exists(file):
         if verbose:
             print(f'Making cache file: {file} with protocol={protocol}, mru={mru}, and capacity={capacity}')
